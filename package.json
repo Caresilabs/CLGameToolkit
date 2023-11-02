@@ -1,0 +1,14 @@
+{
+  "name": "com.caresilabs.clgametoolkit",
+  "version": "1.0.0",
+  "displayName": "CLGameToolkit",
+  "description": "Extentions etc",
+  "unity": "2022.1",
+  "dependencies": {
+  },
+ 
+  "author": {
+    "name": "Caresilabs",
+    "url": "https://caresilabs.com"
+  }
+}
