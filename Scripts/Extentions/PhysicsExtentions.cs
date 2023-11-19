@@ -9,8 +9,8 @@ public static class PhysicsExtentions
 
     public static IEnumerable<RaycastHit> ConeCastAll(Vector3 origin, Vector3 direction, float coneAngle, float maxDistance, float distanceThreshold = 1f, int layerMask = -1)
     {
-        var angleRad = Mathf.Deg2Rad * coneAngle;
-        var maxRadius = Mathf.Sin(angleRad * 0.5f) * maxDistance;
+        var angleRad = Mathf.Deg2Rad * coneAngle  * 0.5f;
+        var maxRadius = Mathf.Sin(angleRad) * maxDistance;
 
         int count = Physics.SphereCastNonAlloc(origin, maxRadius, direction, results, maxDistance, layerMask);
         if (count == 0)
@@ -18,7 +18,7 @@ public static class PhysicsExtentions
             return Array.Empty<RaycastHit>();
         }
 
-
+        // Can we save one Cos/Sin op here?
         var minDotProduct = Mathf.Cos(angleRad);
 
         var filtered = results.Take(count)
@@ -36,6 +36,6 @@ public static class PhysicsExtentions
         });
 
 
-        return filtered;    //.ToArray();
+        return filtered;
     }
 }

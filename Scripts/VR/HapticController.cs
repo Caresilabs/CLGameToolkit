@@ -1,4 +1,4 @@
-﻿#if ENABLE_VR_TODO
+﻿#if ENABLE_VR
 using UnityEngine.XR.Interaction.Toolkit;
 
 public class HapticController
