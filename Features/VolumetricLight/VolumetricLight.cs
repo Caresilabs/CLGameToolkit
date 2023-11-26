@@ -24,6 +24,7 @@ public class VolumetricLight : MonoBehaviour
     //[Min(0)]
     //[SerializeField] private float SourceRadius = 0;
     [SerializeField] private bool UseCollisionTrigger = false;
+    [SerializeField] private LayerMask CollisionMask = -1;
 
     [HideInInspector]
     [SerializeField] private SphereCollider Collider;
@@ -70,7 +71,7 @@ public class VolumetricLight : MonoBehaviour
         renderer.sharedMaterial.SetFloat("_EdgeFalloff", VolumeEdgeFade);
 
         renderer.sharedMaterial.SetFloat("_Range", Range);
-        renderer.sharedMaterial.SetFloat("_Radius", Mathf.Tan(Mathf.Deg2Rad * Angle * 0.5f));
+        renderer.sharedMaterial.SetFloat("_RadiusNormalized", Mathf.Tan(Mathf.Deg2Rad * Angle * 0.5f));
 
         var radius = Range * Mathf.Tan(Mathf.Deg2Rad * Angle * 0.5f);
         renderer.localBounds = new Bounds(new Vector3(0, 0, Range * 0.5f), new Vector3(radius * 2, radius * 2, Range));
@@ -222,7 +223,7 @@ public class VolumetricLight : MonoBehaviour
     {
         if (!UseCollisionTrigger) return;
 
-        var collisions = PhysicsExtentions.ConeCastAll(transform.position, transform.forward, Angle, Range).Select(hit => hit.transform);
+        var collisions = PhysicsExtentions.ConeCastAll(transform.position, transform.forward, Angle, Range, CollisionMask).Select(hit => hit.transform);
         tempColliders.Clear();
 
         foreach (var collision in collisions.Except(currentColliders))

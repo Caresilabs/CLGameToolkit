@@ -2,9 +2,9 @@
 
 public static class VectorExtentions
 {
-    public static Vector3 XZ(this Vector3 vector)
+    public static Vector3 XZ(this Vector3 vector, float overrideY = 0f)
     {
-        return new Vector3(vector.x, 0, vector.z);
+        return new Vector3(vector.x, overrideY, vector.z);
     }
 
     public static Vector3 Parse(string vector)
@@ -24,7 +24,6 @@ public static class VectorExtentions
     }
 
 
-    // (0.33333330, -3.14159300, 0.13533530)
     public static void ScaleAround(Transform target, Vector3 pivot, Vector3 newScale)
     {
         Vector3 A = target.localPosition;
@@ -43,4 +42,3 @@ public static class VectorExtentions
     }
 
 }
-

@@ -7,10 +7,9 @@ public class FiniteStateMachine<T> : ISerializationCallbackReceiver
 {
     [SerializeReference] private List<FSMInternalState> editorStates;
     [SerializeField] private List<FSMInternalTransition> editorTransitions;
-
+    [SerializeField] private T entity;
 
     private Dictionary<string, FSMState<T>> states;
-    private T entity;
     private Dictionary<FSMState<T>, List<FSMTransition>> transitions;
     private List<FSMTransition> anyTransitions;
 
@@ -32,6 +31,10 @@ public class FiniteStateMachine<T> : ISerializationCallbackReceiver
         this.entity = entity;
     }
 
+    /// <summary>
+    /// Init the FSM with a custom Entity. This could be useful when the entity is NOT serializable.
+    /// </summary>
+    /// <param name="entity"></param>
     public void Init(T entity)
     {
         this.entity = entity;
@@ -62,15 +65,6 @@ public class FiniteStateMachine<T> : ISerializationCallbackReceiver
 
         return this;
     }
-
-    //public FiniteStateMachine<T> Replace(string id, FSMState<T> state)
-    //{
-    //    states[id] = state;
-    //    state.Entity = entity;
-    //    state.SetState = SetState;
-
-    //    return this;
-    //}
 
     public FiniteStateMachine<T> AddTransition(string from, string to, Func<bool> predicate = null)
     {
@@ -157,7 +151,7 @@ public class FiniteStateMachine<T> : ISerializationCallbackReceiver
             currentState.Complete = null;
         }
 
-        Debug.Log("New FSM State: " + newState.GetType());
+        Logger.Debug("New FSM State: " + newState.GetType());
         /// State = id; TODOOO
         currentState = newState;
         newState.SetState = SetState;
@@ -171,7 +165,7 @@ public class FiniteStateMachine<T> : ISerializationCallbackReceiver
         List<FSMTransition> list = transitions.GetValueOrDefault(currentState, null);
         if (list == null || list.Count == 0)
         {
-            Debug.LogError($"Ghost: MISSING STATE for {entity.ToString()} after '{State}'");
+            Logger.Error($"Ghost: MISSING STATE for {entity} after '{State}'");
             return;
         }
 
@@ -181,7 +175,7 @@ public class FiniteStateMachine<T> : ISerializationCallbackReceiver
 
     private void SetStateFail(string id)
     {
-        Debug.LogError("Error trying to SetState from an inactive state: " + entity.ToString() + "::" + id);
+        Logger.Error("Error trying to SetState from an inactive state: " + entity.ToString() + "::" + id);
     }
 
     public void OnBeforeSerialize() {}
@@ -203,6 +197,11 @@ public class FiniteStateMachine<T> : ISerializationCallbackReceiver
 #if !UNITY_EDITOR
             editorTransitions.Clear();
             editorStates.Clear();
+
+             if (entity != null)
+            {
+                Init(entity);
+            }
 #endif
         }
 

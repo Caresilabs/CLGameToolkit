@@ -28,10 +28,17 @@ public class FSMPropertyDrawer : PropertyDrawer
 
         var statesProp = property.FindPropertyRelative("editorStates");
         var transitionsProp = property.FindPropertyRelative("editorTransitions");
+        var entityProperty = property.FindPropertyRelative("entity");
 
         GUILayout.Box($"Current State:\n**{currentStateName}**", GUILayout.Width(172), GUILayout.Height(48));
 
-        EditorGUILayout.LabelField($"Finite State Machine <{stateMachine.GetType().GetGenericArguments()[0]}>");
+        var entityType = stateMachine.GetType().GetGenericArguments()[0];
+        EditorGUILayout.LabelField($"Finite State Machine <{entityType}>", EditorStyles.largeLabel);
+
+        if (entityProperty != null)
+            EditorGUILayout.PropertyField(entityProperty, new GUIContent($"Entity ({entityType})"));
+        else
+            EditorGUILayout.LabelField($"Custom Entity:\t<{entityType}> (Be sure to call FSM.Init())");
         EditorGUILayout.Space();
 
         EditorGUI.BeginProperty(position, label, statesProp);
@@ -114,7 +121,7 @@ public class FSMPropertyDrawer : PropertyDrawer
 
                 EditorGUI.indentLevel = 1;
 
-                EditorGUI.PropertyField(rect, element, includeChildren: true, label: new GUIContent(stateName + (isEntryState ? " (Entry State)" : "")));   //, new GUIContent(element.managedReferenceValue.GetType().Name));
+                EditorGUI.PropertyField(rect, element, new GUIContent(stateName + (isEntryState ? " (Entry State)" : "")), true);
             };
 
             list.elementHeightCallback += idx =>

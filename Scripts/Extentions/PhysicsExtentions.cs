@@ -9,7 +9,7 @@ public static class PhysicsExtentions
 
     public static IEnumerable<RaycastHit> ConeCastAll(Vector3 origin, Vector3 direction, float coneAngle, float maxDistance, float distanceThreshold = 1f, int layerMask = -1)
     {
-        var angleRad = Mathf.Deg2Rad * coneAngle  * 0.5f;
+        var angleRad = Mathf.Deg2Rad * coneAngle * 0.5f;
         var maxRadius = Mathf.Sin(angleRad) * maxDistance;
 
         int count = Physics.SphereCastNonAlloc(origin, maxRadius, direction, results, maxDistance, layerMask);
@@ -24,7 +24,7 @@ public static class PhysicsExtentions
         var filtered = results.Take(count)
             .Select(hit =>
             {
-                if (hit.point == Vector3.zero) // Overlaps item 
+                if (hit.point == Vector3.zero)  // Overlaps item 
                     hit.point = hit.transform.position;
 
                 return hit;
@@ -32,7 +32,11 @@ public static class PhysicsExtentions
             .Where((hit, index) =>
         {
             Vector3 directionToHit = hit.point - origin;
-            return Vector3.Dot(directionToHit.normalized, direction) > minDotProduct || directionToHit.magnitude < distanceThreshold;
+            // 1. Or we are too close and override it.
+            // 2. Check distance, as we could have a collsion further away due to the spheres.
+            // 3. Check the cone angle is allowed.
+            float distance = hit.distance > 0 ? hit.distance : directionToHit.magnitude;
+            return distance < distanceThreshold || (distance <= maxDistance && Vector3.Dot(directionToHit.normalized, direction) > minDotProduct);
         });
 
 

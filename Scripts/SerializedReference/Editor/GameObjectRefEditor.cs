@@ -1,6 +1,7 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
+[CustomPropertyDrawer(typeof(GameObjectRef))]
 [CustomPropertyDrawer(typeof(GameObjectRef<>))]
 public class GameObjectRefEditor : PropertyDrawer
 {
@@ -8,11 +9,11 @@ public class GameObjectRefEditor : PropertyDrawer
     {
         SerializedProperty referenceProperty = property.FindPropertyRelative("gameObjectReference");
 
-        var reference = fieldInfo.GetValue(property.serializedObject.targetObject);
-        var generic = reference.GetType().GetGenericArguments()?[0];
+        System.Type referenceType = fieldInfo.FieldType;
+        var generic = referenceType == typeof(GameObjectRef) ? typeof(Transform) : referenceType.GetGenericArguments()?[0];
 
         GameObjectId obj = GameObjectId.Find(referenceProperty.stringValue);
-        GameObjectId newObject = EditorGUILayout.ObjectField($"{label.text} <{generic?.Name}>", obj, typeof(GameObjectId), allowSceneObjects: true) as GameObjectId;
+        GameObjectId newObject = EditorGUI.ObjectField(rect, $"{label.text} <{generic?.Name}>", obj, typeof(GameObjectId), allowSceneObjects: true) as GameObjectId;
   
         referenceProperty.stringValue = newObject != null ? newObject.Id : null;
 

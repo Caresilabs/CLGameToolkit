@@ -61,7 +61,7 @@ public class ResourceRef<T> where T : Object
 }
 
 [System.Serializable]
-public class ResourcePrefabRef : ResourceRef<GameObject>
+public class ResourceRef : ResourceRef<GameObject>
 {
 
 }
