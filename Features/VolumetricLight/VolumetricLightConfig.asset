@@ -12,6 +12,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97166871c4ac9bd42bbb47da5c75ce31, type: 3}
   m_Name: VolumetricLightConfig
   m_EditorClassIdentifier: 
-  sharedMeshes:
-    m_Keys: 
-    m_Values: []

@@ -13,4 +13,6 @@ public class SceneRef
     {
         return reference.levelPath;
     }
+
+    public bool Exists => !string.IsNullOrEmpty(levelPath);
 }

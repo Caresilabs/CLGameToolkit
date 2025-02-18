@@ -12,6 +12,9 @@ public class SceneRefEditor : PropertyDrawer
 
         SceneAsset scene = (SceneAsset)EditorGUI.ObjectField(position, label, sceneObject, typeof(SceneAsset), false);
 
+        if (property.serializedObject.isEditingMultipleObjects)
+            return;
+
         if (scene == null)
         {
             pathRef.stringValue = "";
@@ -19,7 +22,7 @@ public class SceneRefEditor : PropertyDrawer
         }
         else if (scene.name != pathRef.stringValue)
         {
-            var newPath = AssetDatabase.GetAssetPath(scene);
+            string newPath = AssetDatabase.GetAssetPath(scene);
             if (newPath == null)
             {
                 Debug.LogWarning("The scene " + scene.name + " cannot be used. To use this scene add it to the build settings for the project");
@@ -28,6 +31,7 @@ public class SceneRefEditor : PropertyDrawer
             {
                 pathRef.stringValue = newPath;
                 guidRef.stringValue = AssetDatabase.AssetPathToGUID(newPath);
+                property.serializedObject.ApplyModifiedProperties();
             }
         }
 

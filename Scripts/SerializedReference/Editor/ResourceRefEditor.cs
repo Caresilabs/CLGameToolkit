@@ -1,6 +1,7 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
+[CustomPropertyDrawer(typeof(ResourceRef))]
 [CustomPropertyDrawer(typeof(ResourceRef<>))]
 public class ResourceRefEditor : PropertyDrawer
 {
@@ -8,46 +9,56 @@ public class ResourceRefEditor : PropertyDrawer
     {
         SerializedProperty pathRef = property.FindPropertyRelative("path");
         SerializedProperty guidRef = property.FindPropertyRelative("assetGUID");
-        var sceneObject = GetResourceObject(guidRef.stringValue);
+        Object loadedResourceObject = GetResourceObject(guidRef.stringValue);
 
-        var reference = fieldInfo.GetValue(property.serializedObject.targetObject);
-        var generic = reference.GetType().GetGenericArguments()?[0];
+        System.Type referenceType = fieldInfo.FieldType.IsArray ? fieldInfo.FieldType.GetElementType() : fieldInfo.FieldType;
+        System.Type generic = referenceType == typeof(ResourceRef) ? typeof(GameObject) : referenceType.GetGenericArguments()?[0];
 
-        Object prefab = EditorGUI.ObjectField(position, label, sceneObject, generic, false);
+        string name = label.text;
+        Object selectedAsset = EditorGUI.ObjectField(position, name, loadedResourceObject, generic, false);
 
-        if (prefab == null)
+        if (property.serializedObject.isEditingMultipleObjects)
+            return;
+
+        if (selectedAsset == null)
         {
             pathRef.stringValue = "";
             guidRef.stringValue = "";
+            property.serializedObject.ApplyModifiedProperties();
+            return;
         }
-        else if (prefab.name != pathRef.stringValue)
+
+        string newPath = AssetDatabase.GetAssetPath(selectedAsset);
+        if (newPath == null)
         {
-            var newPath = AssetDatabase.GetAssetPath(prefab);
-            if (newPath == null)
-            {
-                Debug.LogWarning("The prefab " + prefab.name + " can't be found.");
-            }
-            else
-            {
-                if (!newPath.Contains("Resources"))
-                {
-                    Debug.LogWarning("The asset is not in a Resources folder!");
-                    return;
-                }
-
-                pathRef.stringValue = newPath;
-                guidRef.stringValue = AssetDatabase.AssetPathToGUID(newPath);
-            }
+            Debug.LogWarning("The prefab " + selectedAsset.name + " can't be found.");
         }
+        else
+        {
+            if (!newPath.Contains("Resources"))
+            {
+                Debug.LogWarning("The asset is not in a Resources folder!");
+                return;
+            }
 
+            GameObject assetAsGameObject = selectedAsset as GameObject;
+            if (assetAsGameObject != null && assetAsGameObject.GetComponent<ResourceId>() == null)
+            {
+                Debug.LogWarning($"The asset {selectedAsset} is missing a recommended ResourceId component");
+            }
+
+            pathRef.stringValue = ResourceRef.ConvertToResourcesPath(newPath);
+            guidRef.stringValue = AssetDatabase.AssetPathToGUID(newPath);
+            property.serializedObject.ApplyModifiedProperties();
+        }
     }
-    protected GameObject GetResourceObject(string assetGUID)
+
+    protected Object GetResourceObject(string assetGUID)
     {
         if (string.IsNullOrEmpty(assetGUID))
             return null;
 
-        var assetPath = AssetDatabase.GUIDToAssetPath(assetGUID);
-
-        return AssetDatabase.LoadAssetAtPath(assetPath, typeof(GameObject)) as GameObject;
+        string assetPath = AssetDatabase.GUIDToAssetPath(assetGUID);
+        return AssetDatabase.LoadAssetAtPath<Object>(assetPath);
     }
 }

@@ -23,11 +23,29 @@ public class VolumetricLight : MonoBehaviour
     [SerializeField] private float Range = 2f;
     //[Min(0)]
     //[SerializeField] private float SourceRadius = 0;
+    [Header("Collision")]
     [SerializeField] private bool UseCollisionTrigger = false;
     [SerializeField] private LayerMask CollisionMask = -1;
 
     [HideInInspector]
     [SerializeField] private SphereCollider Collider;
+
+    private void Start()
+    {
+        MeshRenderer renderer = GetComponent<MeshRenderer>();
+        MeshFilter meshFilter = GetComponent<MeshFilter>();
+
+        if (meshFilter.sharedMesh == null)
+            meshFilter.sharedMesh = Config.GetMesh(Resolution);
+
+        UpdateRenderBounds(renderer);
+
+        if (UseCollisionTrigger)
+        {
+            tempColliders = new();
+            currentColliders = new();
+        }
+    }
 
 #if UNITY_EDITOR
 
@@ -46,9 +64,6 @@ public class VolumetricLight : MonoBehaviour
     [Header("Advanced")]
     [SerializeField] private Shader shader;
 
-    [Min(3f)]
-    [SerializeField] private int Resolution = 16; // Number of vertices around the base of the cone
-    [SerializeField] private VolumetricLightConfig Config;
 
     void UpdateValues()
     {
@@ -62,19 +77,25 @@ public class VolumetricLight : MonoBehaviour
         {
             renderer.sharedMaterial = new Material(shader);
         }
+        var material = renderer.sharedMaterial;
 
         renderer.staticShadowCaster = false;
         renderer.receiveShadows = false;
         renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        renderer.sharedMaterial.SetColor("_Color", VolumeColor);
-        renderer.sharedMaterial.SetFloat("_Opacity", VolumeOpacity);
-        renderer.sharedMaterial.SetFloat("_EdgeFalloff", VolumeEdgeFade);
 
-        renderer.sharedMaterial.SetFloat("_Range", Range);
-        renderer.sharedMaterial.SetFloat("_RadiusNormalized", Mathf.Tan(Mathf.Deg2Rad * Angle * 0.5f));
+        if (GameObjectUtility.AreStaticEditorFlagsSet(gameObject, StaticEditorFlags.ContributeGI))
+        {
+            GameObjectUtility.SetStaticEditorFlags(gameObject, GameObjectUtility.GetStaticEditorFlags(gameObject) & ~(StaticEditorFlags.ContributeGI | StaticEditorFlags.OccluderStatic | StaticEditorFlags.OccludeeStatic));
+        }
 
-        var radius = Range * Mathf.Tan(Mathf.Deg2Rad * Angle * 0.5f);
-        renderer.localBounds = new Bounds(new Vector3(0, 0, Range * 0.5f), new Vector3(radius * 2, radius * 2, Range));
+        material.SetColor("_Color", VolumeColor);
+        material.SetFloat("_Opacity", VolumeOpacity);
+        material.SetFloat("_EdgeFalloff", VolumeEdgeFade);
+
+        material.SetFloat("_Range", Range);
+        material.SetFloat("_RadiusNormalized", Mathf.Tan(Mathf.Deg2Rad * Angle * 0.5f));
+
+        UpdateRenderBounds(renderer);
 
         // Spot Light
         var light = InitLight();
@@ -99,7 +120,7 @@ public class VolumetricLight : MonoBehaviour
         }
         else
         {
-            GameObject.DestroyImmediate(Collider, true);
+            Object.DestroyImmediate(Collider, true);
         }
     }
 
@@ -116,91 +137,10 @@ public class VolumetricLight : MonoBehaviour
 
     void OnValidate()
     {
+        if (Application.isPlaying) return;
+
         Invoke(nameof(UpdateValues), 0f);
     }
-
-
-    //private Mesh GenerateConeMesh()
-    //{
-    //    Mesh mesh = new Mesh();
-    //    mesh.name = "LightMesh";
-
-    //    // Vertices
-    //    int amountOfTopVertices = Resolution * 2;
-    //    int topVerticesStartOffset = Resolution * 2;
-
-    //    Vector3[] vertices = new Vector3[Resolution * 2 + amountOfTopVertices];
-    //    float angleIncrement = 360f / Resolution;
-
-    //    float radius = Range * Mathf.Tan(Mathf.Deg2Rad * Angle * 0.5f);
-
-
-    //    for (int i = 0; i < Resolution; i++)
-    //    {
-    //        float angle = i * angleIncrement * Mathf.Deg2Rad;
-    //        float x = Mathf.Cos(angle);
-    //        float z = Mathf.Sin(angle);
-
-    //        vertices[i] = new Vector3(x, z, 1); // new Vector3(radius * x, radius * z, Range);
-    //        vertices[Resolution + i] = vertices[i];
-
-    //        // Apex vertex
-    //        vertices[topVerticesStartOffset + i] = new Vector3(SourceRadius * x, SourceRadius * z, 0f);
-    //        vertices[topVerticesStartOffset + Resolution + i] = vertices[topVerticesStartOffset + i];
-    //    }
-
-    //    // Triangles
-    //    int[] triangles = new int[Resolution * 6]; // 3 vertices per triangle, 2 triangles per face. Both sides
-    //    int triangleIndex = 0;
-
-    //    // Side triangles
-    //    for (int i = 0; i < Resolution; i++)
-    //    {
-    //        triangles[triangleIndex++] = i;
-    //        triangles[triangleIndex++] = topVerticesStartOffset + i;
-    //        triangles[triangleIndex++] = (i + 1) % Resolution;
-
-    //        triangles[triangleIndex++] = Resolution + i;
-    //        triangles[triangleIndex++] = Resolution + ((i + 1) % Resolution);
-    //        triangles[triangleIndex++] = topVerticesStartOffset + Resolution + i;
-    //    }
-
-    //    // Normals (for simplicity, all normals point outward)
-    //    Vector3[] normals = new Vector3[vertices.Length];
-    //    for (int i = 0; i < Resolution; i++)
-    //    {
-    //        float angle = i * angleIncrement * Mathf.Deg2Rad;
-    //        float x = Mathf.Cos(angle);
-    //        float z = Mathf.Sin(angle);
-
-    //        Vector3 bottom = new Vector3(radius * x, radius * z, Range);
-
-    //        var normal = Vector3.Cross(bottom, Vector3.Cross(bottom, Vector3.forward)).normalized;
-
-    //        normals[i] = normal;
-    //        normals[Resolution + i] = -normal;
-
-    //        // Top
-    //        normals[topVerticesStartOffset + i] = new Vector3(x, z, 0);
-    //        normals[topVerticesStartOffset + Resolution + i] = -normals[topVerticesStartOffset + i];
-    //    }
-
-    //    // UV
-    //    Vector2[] uv = new Vector2[vertices.Length];
-    //    for (int i = 0; i < uv.Length; i++)
-    //    {
-    //        uv[i] = new Vector2(vertices[i].x / (2f * radius) + 0.5f, 1 - (vertices[i].z / (Range)));
-    //    }
-
-    //    mesh.vertices = vertices;
-    //    mesh.triangles = triangles;
-    //    mesh.normals = normals;
-    //    mesh.uv = uv;
-
-    //    mesh.bounds = new Bounds(new Vector3(0, 0, Range * 0.5f), new Vector3(radius * 2, radius * 2, Range));
-
-    //    return mesh;
-    //}
 
     [MenuItem("GameObject/Light/Volumetric Light")]
     public static void CreateNewLight()
@@ -216,37 +156,77 @@ public class VolumetricLight : MonoBehaviour
 
 #endif
 
-    // TODO needs to be in final build
-    private HashSet<Transform> currentColliders = new();
-    private List<Transform> tempColliders = new();
+    private void UpdateRenderBounds(MeshRenderer renderer)
+    {
+        var radius = Range * Mathf.Tan(Mathf.Deg2Rad * Angle * 0.5f);
+        renderer.localBounds = new Bounds(new Vector3(0, 0, Range * 0.5f), new Vector3(radius * 2, radius * 2, Range));
+    }
+
+    private HashSet<Transform> currentColliders;
+    private HashSet<Transform> tempColliders;
     private void FixedUpdate()
     {
         if (!UseCollisionTrigger) return;
 
-        var collisions = PhysicsExtentions.ConeCastAll(transform.position, transform.forward, Angle, Range, CollisionMask).Select(hit => hit.transform);
+        IEnumerable<RaycastHit> collisions = PhysicsExtentions.ConeCastAll(transform.position, transform.forward, Angle, Range, .25f, CollisionMask); //.Select(hit => hit.transform);
         tempColliders.Clear();
 
-        foreach (var collision in collisions.Except(currentColliders))
+        // Populate newColliders list with the transforms from hits
+        foreach (RaycastHit collision in collisions)
         {
-            collision.transform.SendMessage("OnTriggerEnter", Collider, SendMessageOptions.DontRequireReceiver);
-            currentColliders.Add(collision);
+            Transform collider = collision.transform;
+            tempColliders.Add(collider);
+
+            //// Handle newly entered colliders
+            if (!currentColliders.Contains(collider))
+            {
+                collider.SendMessage("OnTriggerEnter", Collider, SendMessageOptions.DontRequireReceiver);
+                currentColliders.Add(collider);
+            }
         }
 
-        foreach (var collision in currentColliders.Except(collisions))
+        // Remove exited colliders
+        foreach (Transform collider in currentColliders)
         {
-            if (collision != null)
-                collision.transform.SendMessage("OnTriggerExit", Collider, SendMessageOptions.DontRequireReceiver);
-            tempColliders.Add(collision);
+            if (tempColliders.Contains(collider))
+            {
+                tempColliders.Remove(collider);
+            }
+            else if (collider != null)
+            {
+                collider.SendMessage("OnTriggerExit", Collider, SendMessageOptions.DontRequireReceiver);
+                tempColliders.Add(collider);
+            }
         }
 
-        foreach (var collision in tempColliders)
+        foreach (Transform collision in tempColliders)
         {
-                currentColliders.Remove(collision);
+            currentColliders.Remove(collision);
         }
+
+        //foreach (var collision in collisions.Except(currentColliders))
+        //{
+        //    collision.transform.SendMessage("OnTriggerEnter", Collider, SendMessageOptions.DontRequireReceiver);
+        //    currentColliders.Add(collision);
+        //}
+
+        //foreach (var collision in currentColliders.Except(collisions))
+        //{
+        //    if (collision != null)
+        //        collision.transform.SendMessage("OnTriggerExit", Collider, SendMessageOptions.DontRequireReceiver);
+        //    tempColliders.Add(collision);
+        //}
+
+        //foreach (var collision in tempColliders)
+        //{
+        //    currentColliders.Remove(collision);
+        //}
     }
 
     private void OnDisable()
     {
+        if (!UseCollisionTrigger) return;
+
         foreach (var collision in currentColliders)
         {
             if (collision != null)
@@ -256,5 +236,10 @@ public class VolumetricLight : MonoBehaviour
         currentColliders.Clear();
         tempColliders.Clear();
     }
+
+
+    [Min(3f)]
+    [SerializeField] private int Resolution = 16; // Number of vertices around the base of the cone
+    [SerializeField] private VolumetricLightConfig Config;
 
 }

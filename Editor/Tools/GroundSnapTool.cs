@@ -1,7 +1,6 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-// Author: https://gist.github.com/C-Through/64dd2084a7f4adefef03af1d82dd5566
 public static class GroundSnapTool
 {
     private const string ActionName = "Snap to Ground";
@@ -12,7 +11,16 @@ public static class GroundSnapTool
         RegisterUndo();
 
         foreach (Transform transform in Selection.transforms)
-            MoveToGround(transform);
+            MoveToGround(transform, false);
+    }
+
+    [MenuItem("Tools/Scene/Snap To Ground & Normal &%g")]
+    public static void PerformWithNormal()
+    {
+        RegisterUndo();
+
+        foreach (Transform transform in Selection.transforms)
+            MoveToGround(transform, true);
     }
 
     private static void RegisterUndo()
@@ -20,9 +28,10 @@ public static class GroundSnapTool
         Undo.RegisterCompleteObjectUndo(Selection.transforms, ActionName);
     }
 
-    private static void MoveToGround(Transform transform)
+    public static void MoveToGround(Transform transform, bool useNormal)
     {
-        bool hasCollider = transform.GetComponent<Collider>() != null;
+        var collider = transform.GetComponent<Collider>();
+        bool hasCollider = collider != null;
         bool hitDown = Physics.Raycast(transform.position, Vector3.down, out RaycastHit downHit);
         bool hitUp = Physics.Raycast(downHit.point, Vector3.up, out RaycastHit upHit);
 
@@ -35,8 +44,15 @@ public static class GroundSnapTool
 
         if (hitDown && hitUp)
         {
-            Vector3 translation = new Vector3(0, downHit.point.y - upHit.point.y, 0);
+            var upHitPosition = upHit.transform == transform ? upHit.point : transform.position;
+            Vector3 translation = new Vector3(0, downHit.point.y - upHitPosition.y, 0);
             transform.Translate(translation, Space.World);
+        }
+
+        if (useNormal && hitDown)
+        {
+            Quaternion targetRotation = Quaternion.FromToRotation(transform.up, downHit.normal) * transform.rotation;
+            transform.rotation = targetRotation;
         }
     }
 }

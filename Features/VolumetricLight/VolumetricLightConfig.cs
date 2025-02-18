@@ -1,24 +1,17 @@
-
-
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.UIElements;
 
 [CreateAssetMenu(fileName = "VolumetricLightConfig", menuName = "Light/VolumetricLightConfig")]
 public class VolumetricLightConfig : ScriptableObject
 {
-    [SerializeField] private SerializedDictionary<int, Mesh> sharedMeshes;
+    private static Dictionary<int, Mesh> sharedMeshes = new();
 
     public Mesh GetMesh(int resolution)
     {
-
-        var existingMesh = sharedMeshes.GetValueOrDefault(resolution);
-
-        if (existingMesh != null) return existingMesh;
-
-        return CreateMesh(resolution);
+        var mesh = sharedMeshes.GetValueOrDefault(resolution);
+        if (mesh == null) mesh = CreateMesh(resolution);
+       
+        return mesh;
     }
 
     private Mesh CreateMesh(int resolution)
@@ -26,10 +19,12 @@ public class VolumetricLightConfig : ScriptableObject
         // FIXME
         var SourceRadius = 0f;
         var Range = 1f;
-       
 
-        Mesh mesh = new Mesh();
-        mesh.name = "LightMesh";
+
+        Mesh mesh = new Mesh
+        {
+            name = $"LightMesh_R{resolution}"
+        };
 
         // Vertices
         int amountOfTopVertices = resolution * 2;
@@ -72,24 +67,24 @@ public class VolumetricLightConfig : ScriptableObject
         }
 
         // Normals (for simplicity, all normals point outward)
-        Vector3[] normals = new Vector3[vertices.Length];
-        for (int i = 0; i < resolution; i++)
-        {
-            float angle = i * angleIncrement * Mathf.Deg2Rad;
-            float x = Mathf.Cos(angle);
-            float z = Mathf.Sin(angle);
+        //Vector3[] normals = new Vector3[vertices.Length];
+        //for (int i = 0; i < resolution; i++)
+        //{
+        //    float angle = i * angleIncrement * Mathf.Deg2Rad;
+        //    float x = Mathf.Cos(angle);
+        //    float z = Mathf.Sin(angle);
 
-            Vector3 bottom = new Vector3(radius * x, radius * z, Range);
+        //    Vector3 bottom = new Vector3(radius * x, radius * z, Range);
 
-            var normal = Vector3.Cross(bottom, Vector3.Cross(bottom, Vector3.forward)).normalized;
+        //    var normal = Vector3.Cross(bottom, Vector3.Cross(bottom, Vector3.forward)).normalized;
 
-            normals[i] = normal;
-            normals[resolution + i] = -normal;
+        //    normals[i] = normal;
+        //    normals[resolution + i] = -normal;
 
-            // Top
-            normals[topVerticesStartOffset + i] = new Vector3(x, z, 0);
-            normals[topVerticesStartOffset + resolution + i] = -normals[topVerticesStartOffset + i];
-        }
+        //    // Top
+        //    normals[topVerticesStartOffset + i] = new Vector3(x, z, 0);
+        //    normals[topVerticesStartOffset + resolution + i] = -normals[topVerticesStartOffset + i];
+        //}
 
         // UV
         Vector2[] uv = new Vector2[vertices.Length];
@@ -100,11 +95,10 @@ public class VolumetricLightConfig : ScriptableObject
 
         mesh.vertices = vertices;
         mesh.triangles = triangles;
-        mesh.normals = normals;
+        // mesh.normals = normals;
         mesh.uv = uv;
 
-        sharedMeshes.Add(resolution, mesh);
-
+        sharedMeshes[resolution] = mesh;
         return mesh;
     }
 }
