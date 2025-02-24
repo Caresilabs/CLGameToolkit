@@ -21,9 +21,9 @@ public class StatModifier
         this.cachedFinalMultiplier = baseMultiplier;
     }
 
-    public void AddOrUpdate(object key, float value, StatsModifierType type = StatsModifierType.Additive)
+    public void AddOrUpdate(object key, float value, ModifierType type = ModifierType.Multiplicative)
     {
-        if (type == StatsModifierType.Additive)
+        if (type == ModifierType.Additive)
             additiveModifiers[key] = value;
         else
             multiplicativeModifiers[key] = value;
@@ -31,28 +31,25 @@ public class StatModifier
         RecalculateMultiplier();
     }
 
-    public void Remove(object key, StatsModifierType type = StatsModifierType.Additive)
+    /// <summary>
+    /// Remove all modifiers with this key
+    /// </summary>
+    /// <param name="key"></param>
+    public void Remove(object key)
     {
-        Dictionary<object, float> dict = null;
-        switch (type)
-        {
-            case StatsModifierType.Additive:
-                dict = additiveModifiers;
-                break;
-            case StatsModifierType.Multiplicative:
-                dict = multiplicativeModifiers;
-                break;
-            default:
-                break;
-        }
-
-        if (dict != null && dict.Remove(key))
-            RecalculateMultiplier();
+        RemoveAdditive(key);
+        RemoveMultiplicative(key);
     }
 
     public void RemoveMultiplicative(object key)
     {
         if (multiplicativeModifiers.Remove(key))
+            RecalculateMultiplier();
+    }
+
+    public void RemoveAdditive(object key)
+    {
+        if (additiveModifiers.Remove(key))
             RecalculateMultiplier();
     }
 
@@ -70,7 +67,7 @@ public class StatModifier
         Logger.Debug("Stats Multiplier Recalculated: " + cachedFinalMultiplier);
     }
 
-    public enum StatsModifierType
+    public enum ModifierType
     {
         Additive,
         Multiplicative,
