@@ -109,18 +109,9 @@ public class AudioManager : MonoBehaviour
         audioSource.volume = volume;
         audioSource.Play();
 
-        bool use3DAudio = !position.IsZero();
-        audioSource.spatialBlend = use3DAudio ? 1f : 0f;
+        audioSource.spatialBlend = position.IsZero() ? 0f : 1f;
         audioSource.maxDistance = 100f;
         audioSource.minDistance = 1.5f;
-
-        if (GameManager.IsSplitScreenEnabled && use3DAudio) // Nice hack bro
-        {
-            PlayerManager closestPlayer = PlayerManager.Closest(position);
-            audioSource.spatialBlend = 0;
-            audioSource.volume = Mathf.InverseLerp(100f, 1.5f, Vector3.Distance(closestPlayer.HeadPosition, position)); // SQR opt?
-            // audioSource.panStereo
-        }
 
         float duration = clip.length; // * (Time.timeScale < 0.009999999776482582 ? 0.01f : Time.timeScale);
         sfxPool.ReleaseDelayed(audioSource, duration / pitch, true);
