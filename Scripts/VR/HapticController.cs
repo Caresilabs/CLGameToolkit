@@ -1,4 +1,4 @@
-﻿#if ENABLE_VR
+﻿#if XR_INPUT_DEVICES_AVAILABLE
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.InputSystem;
