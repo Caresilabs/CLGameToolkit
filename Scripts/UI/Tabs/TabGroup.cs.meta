@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 2b805062a0fba6944ab2b779f6acb04c
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - TabContainer: {instanceID: 0}
+  - InputCycleAction: {fileID: 7799936730315868637, guid: a452c8608faedec4695676d3dc768c1f, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -27,14 +27,25 @@ public class SerializableDictionaryDrawer : PropertyDrawer
 
                 SerializedProperty keyProperty = keysProperty.GetArrayElementAtIndex(index);
                 SerializedProperty valueProperty = valuesProperty.GetArrayElementAtIndex(index);
+                float valueHeight = EditorGUI.GetPropertyHeight(valueProperty);
+                bool isValueAnObject = valueHeight > EditorGUIUtility.singleLineHeight || !valueProperty.isExpanded;
 
                 float halfWidth = rect.width * 0.5f;
                 Rect keyRect = new Rect(rect.x, rect.y, halfWidth, rect.height);
-                Rect valueRect = new Rect(rect.x + halfWidth, rect.y, halfWidth, rect.height);
+                Rect valueRect = isValueAnObject ? new Rect(rect.x, rect.y + rect.height, rect.width, valueHeight) : new Rect(rect.x + halfWidth, rect.y, halfWidth, rect.height);
 
                 EditorGUI.PropertyField(keyRect, keyProperty, GUIContent.none);
-                EditorGUI.PropertyField(valueRect, valueProperty, GUIContent.none);
+                EditorGUI.PropertyField(valueRect, valueProperty, GUIContent.none, true);
+            };
+            reorderableList.elementHeightCallback = (int index) =>
+            {
+                var valueProperty = valuesProperty.GetArrayElementAtIndex(index);
+                float valueHeight = EditorGUI.GetPropertyHeight(valueProperty);
 
+                if (valueHeight <= EditorGUIUtility.singleLineHeight && valueProperty.isExpanded)
+                    return EditorGUIUtility.singleLineHeight;
+
+                return EditorGUI.GetPropertyHeight(keysProperty.GetArrayElementAtIndex(index)) + valueHeight;
             };
             reorderableList.onAddCallback = list =>
             {
@@ -42,15 +53,17 @@ public class SerializableDictionaryDrawer : PropertyDrawer
                 list.serializedProperty.arraySize++;
                 list.index = index;
 
+
                 keysProperty.arraySize++;
                 valuesProperty.arraySize++;
 
                 SerializedProperty keyProperty = keysProperty.GetArrayElementAtIndex(index);
                 SerializedProperty valueProperty = valuesProperty.GetArrayElementAtIndex(index);
 
-                // TODO Doesnt work
-                valueProperty.boxedValue = GetDefault(Type.GetType(valuesProperty.arrayElementType));
-                valueProperty.boxedValue = GetDefault(Type.GetType(valuesProperty.arrayElementType));
+
+
+                CreateNewDefaultFor(keyProperty);
+                CreateNewDefaultFor(valueProperty);
             };
             reorderableList.onRemoveCallback = list =>
             {
@@ -66,9 +79,24 @@ public class SerializableDictionaryDrawer : PropertyDrawer
         EditorGUI.EndProperty();
     }
 
+    private void CreateNewDefaultFor(SerializedProperty prop)
+    {
+        string typeString = prop.type;
+        if (typeString == nameof(Enum))
+        {
+            prop.intValue = -1;
+        }
+        else
+        {
+            var type = prop.boxedValue.GetType();
+            prop.boxedValue = GetDefault(type);
+        }
+    }
+
     public static object GetDefault(Type type)
     {
-            return Activator.CreateInstance(type);
+        if (type == null) return null;
+        return Activator.CreateInstance(type);
     }
 
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
