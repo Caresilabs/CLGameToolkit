@@ -157,6 +157,16 @@ public class MusicPlayer : MonoSingleton<MusicPlayer>
         UpdateCurrentLayer(musicStack.Peek());
     }
 
+    public static void Pause()
+    {
+        Instance.MusicSource.Pause();
+    }
+
+    public static void Resume()
+    {
+        Instance.MusicSource.UnPause();
+    }
+
     private IEnumerator CrossFadeMusicAsync(AudioClip musicClip, float duration, float volume, float time = 0)
     {
 #if UNITY_EDITOR
