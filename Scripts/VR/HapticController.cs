@@ -1,62 +1,73 @@
-﻿#if XR_INPUT_DEVICES_AVAILABLE
+﻿using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.InputSystem.Haptics;
 
-public class HapticController
+#if XR_INPUT_DEVICES_AVAILABLE
+    using UnityEngine.XR.Interaction.Toolkit;
+#endif
+
+namespace CLGameToolkit.Input
 {
-    private static XRBaseController left;
-    private static XRBaseController right;
-
-    private static float HapticsScale = 1.0f;
-    private static Tween gamepadTween;
-
-    public static void Init(XRBaseController left, XRBaseController right, float strengthScale)
+    public class HapticController
     {
-        HapticController.left = left;
-        HapticController.right = right;
+        public static float HapticsScale = 1f;
+        private static Dictionary<IHaptics, Tween> gamepadTweens = new();
 
-        HapticsScale = strengthScale;
-    }
+#if XR_INPUT_DEVICES_AVAILABLE
+        private static XRBaseController left;
+        private static XRBaseController right;
 
-    public static void SendHaptics(float strength = 0.2f, float duration = 0.5f)
-    {
-        float strengthNormalized = Mathf.Clamp01(strength * HapticsScale);
-
-        if (left != null)
+        public static void Init(XRBaseController left, XRBaseController right, float strengthScale = 1f)
         {
-            left.SendHapticImpulse(strengthNormalized, duration);
-            right.SendHapticImpulse(strengthNormalized, duration);
-            return;
+            HapticController.left = left;
+            HapticController.right = right;
+
+            HapticsScale = strengthScale;
+        }
+#endif
+
+        public static void PlayHaptics(float strength = 0.2f, float duration = 0.5f, InputDevice device = null)
+        {
+            float strengthNormalized = Mathf.Clamp01(strength * HapticsScale);
+
+#if XR_INPUT_DEVICES_AVAILABLE
+            if (left != null)
+            {
+                left.SendHapticImpulse(strengthNormalized, duration);
+                right.SendHapticImpulse(strengthNormalized, duration);
+                return;
+            }
+#endif
+
+            if ((device ?? Gamepad.current) is IDualMotorRumble gamepad)
+            {
+                // TODO: Support dual motor config
+                float motorPower = strengthNormalized * 0.5f;
+                gamepad.SetMotorSpeeds(motorPower, motorPower);
+                gamepadTweens.GetValueOrDefault(gamepad)?.Kill(false);
+                gamepadTweens[gamepad] = DOVirtual.DelayedCall(duration, gamepad.ResetHaptics);
+            }
         }
 
-        var gamepad = Gamepad.current;
-        if (gamepad != null)
+        public static void StopAll()
         {
-            float motorPower = strengthNormalized * 0.5f;
-            gamepad.SetMotorSpeeds(motorPower, motorPower); // TODO test out the rumble
-            gamepadTween?.Kill(false);
-            gamepadTween = DOVirtual.DelayedCall(duration, StopGamepad);
-        }
-    }
+#if XR_INPUT_DEVICES_AVAILABLE
+            if (left != null)
+            {
+                left.SendHapticImpulse(0, 0);
+                right.SendHapticImpulse(0, 0);
+            }
+#endif
 
-    public static void StopAll()
-    {
-        if (left != null)
-        {
-            left.SendHapticImpulse(0, 0);
-            right.SendHapticImpulse(0, 0);
+            StopGamepad();
         }
 
-        StopGamepad();
-    }
-
-    public static void StopGamepad()
-    {
-        var gamepad = Gamepad.current;
-        gamepad?.ResetHaptics();
+        public static void StopGamepad()
+        {
+            Gamepad gamepad = Gamepad.current;
+            gamepad?.ResetHaptics();
+        }
     }
 }
-
-#endif
