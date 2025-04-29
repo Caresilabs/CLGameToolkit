@@ -261,7 +261,7 @@ public class FiniteStateMachine<T> : ISerializationCallbackReceiver
 
     public void OnAfterDeserialize()
     {
-        if (editorStates != null && states.Count == 0)
+        if (editorStates != null && editorStates.Count > 0 && states.Count == 0)
         {
             editorStartState = editorStates[0] as FSMState<T>;
             foreach (var state in editorStates)
