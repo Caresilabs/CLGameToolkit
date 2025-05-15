@@ -126,16 +126,14 @@ public class FiniteStateMachine<T> : ISerializationCallbackReceiver
 
     public void Update()
     {
-        ////Query any transitions
-        //if (currentState == null)
-        //{
-        //    foreach (var anyTransition in anyTransitions)
-        //    {
-        //        if (anyTransition.Condition == null || anyTransition.Condition())
-        //            SetState(anyTransition.To);
-        //    }
-        //    return;
-        //}
+        if (currentState == null)
+        {
+            if (entity != null)
+                Init(entity);
+            else
+                Logger.Warn("Trying to update FSM without state");
+            return;
+        }
 
         // Query Conditions
         List<FSMTransition> currentTransitions = transitions.GetValueOrDefault(currentState);
@@ -275,11 +273,6 @@ public class FiniteStateMachine<T> : ISerializationCallbackReceiver
             foreach (var transition in editorTransitions)
             {
                 AddTransition(transition.From != "Any" ? transition.From : null, transition.To, null, transition.Probability);
-            }
-
-            if (entity != null)
-            {
-                Init(entity);
             }
         }
     }
