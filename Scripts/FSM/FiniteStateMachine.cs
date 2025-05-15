@@ -277,7 +277,7 @@ public class FiniteStateMachine<T> : ISerializationCallbackReceiver
                 AddTransition(transition.From != "Any" ? transition.From : null, transition.To, null, transition.Probability);
             }
 
-            if (entity != null && Application.isPlaying)
+            if (entity != null)
             {
                 Init(entity);
             }
