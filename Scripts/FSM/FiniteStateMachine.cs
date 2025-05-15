@@ -42,6 +42,9 @@ public class FiniteStateMachine<T> : ISerializationCallbackReceiver
     /// <param name="entity"></param>
     public void Init(T entity)
     {
+        if (currentState != null)
+            return; // Already running
+
         this.entity = entity;
 
         foreach (var item in states.Values)
@@ -272,6 +275,11 @@ public class FiniteStateMachine<T> : ISerializationCallbackReceiver
             foreach (var transition in editorTransitions)
             {
                 AddTransition(transition.From != "Any" ? transition.From : null, transition.To, null, transition.Probability);
+            }
+
+            if (entity != null && Application.isPlaying)
+            {
+                Init(entity);
             }
         }
     }
