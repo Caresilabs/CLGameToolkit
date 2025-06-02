@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using DG.Tweening;
+using CLGameToolkit.Timers;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Haptics;
@@ -13,7 +13,7 @@ namespace CLGameToolkit.Input
     public class HapticController
     {
         public static float HapticsScale = 1f;
-        private static Dictionary<IHaptics, Tween> gamepadTweens = new();
+        private static Dictionary<IHaptics, TimerData> gamepadTweens = new();
 
 #if XR_INPUT_DEVICES_AVAILABLE
         private static XRBaseController left;
@@ -46,8 +46,8 @@ namespace CLGameToolkit.Input
                 // TODO: Support dual motor config
                 float motorPower = strengthNormalized * 0.5f;
                 gamepad.SetMotorSpeeds(motorPower, motorPower);
-                gamepadTweens.GetValueOrDefault(gamepad)?.Kill(false);
-                gamepadTweens[gamepad] = DOVirtual.DelayedCall(duration, gamepad.ResetHaptics);
+                gamepadTweens.GetValueOrDefault(gamepad)?.Stop(false);
+                gamepadTweens[gamepad] = Timer.Delay(duration, gamepad.ResetHaptics);
             }
         }
 

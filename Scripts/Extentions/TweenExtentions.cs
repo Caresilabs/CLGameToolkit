@@ -1,4 +1,5 @@
-﻿using DG.Tweening;
+﻿#if DOTWEEN
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 
@@ -21,3 +22,4 @@ public static class TweenExtentions
     }
 
 }
+#endif

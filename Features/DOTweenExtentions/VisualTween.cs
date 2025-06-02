@@ -1,3 +1,5 @@
+#if DOTWEEN
+
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Events;
@@ -223,3 +225,4 @@ public enum TweenType
     Rotate,
     Color
 }
+#endif

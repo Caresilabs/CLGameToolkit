@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using DG.Tweening;
+using CLGameToolkit.Timers;
 using UnityEngine;
 
 [System.Serializable]
@@ -81,9 +81,7 @@ public class GameObjectPool<T> where T : Component
 
     public void ReleaseDelayed(T obj, float delay, bool ignoreTimeScale = false)
     {
-        DOVirtual.DelayedCall(delay, () =>
-            Release(obj)
-        , ignoreTimeScale);
+        Timer.Delay(delay, () => Release(obj), ignoreTimeScale);
     }
 
     public GameObjectPool<T> DontDestroy()
