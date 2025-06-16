@@ -90,6 +90,10 @@ namespace CLGameToolkit.Serialization
             SaveFile(gameProfileNameGen(profileIndex), null);
         }
 
+        public void DeleteProfile(int profileIndex)
+        {
+            SaveFile(gameProfileNameGen(profileIndex), null);
+        }
 
         private T ReadFromFile<T>(string fileName) where T : SaveFileBase
         {
