@@ -10,12 +10,11 @@ public class AudioManager : MonoBehaviour
     private const string GROUP_SFX = "SFXVolume";
     private const float MUTE_VOLUME = -80f;
 
+    public float MinDistance { get; set; } = 1.5f;
+    public float MaxDistance { get; set; } = 100f;
 
     [SerializeField]
     private AudioMixer Mixer;
-
-    [SerializeField]
-    private AudioSource MusicSource;
 
     [SerializeField]
     private AudioSource SFXSource;
@@ -92,14 +91,14 @@ public class AudioManager : MonoBehaviour
         audioSource.transform.position = position;
 
         // DEBUG REMOVE AFTER FIX!!!
-        if (!audioSource.enabled)
-        {
-            Logger.Warn($"SFX audio source is disabled! {audioSource.clip} -- {audioSource.gameObject.activeInHierarchy}");
-#if UNITY_EDITOR
-            Debug.Break();
-            audioSource.enabled = true;
-#endif
-        }
+//        if (!audioSource.enabled)
+//        {
+//            Logger.Warn($"SFX audio source is disabled! {audioSource.clip} -- {audioSource.gameObject.activeInHierarchy}");
+//#if UNITY_EDITOR
+//            Debug.Break();
+//            audioSource.enabled = true;
+//#endif
+//        }
 
         if (group != null)
             audioSource.outputAudioMixerGroup = group;
@@ -110,8 +109,8 @@ public class AudioManager : MonoBehaviour
         audioSource.Play();
 
         audioSource.spatialBlend = position.IsZero() ? 0f : 1f;
-        audioSource.maxDistance = 100f;
-        audioSource.minDistance = 1.5f;
+        audioSource.maxDistance = MinDistance;
+        audioSource.minDistance = MaxDistance;
 
         float duration = clip.length; // * (Time.timeScale < 0.009999999776482582 ? 0.01f : Time.timeScale);
         sfxPool.ReleaseDelayed(audioSource, duration / pitch, true);
