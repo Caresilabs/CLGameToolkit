@@ -53,7 +53,7 @@ namespace CLGameToolkit.Serialization
             Type baseType = fieldType.GetGenericArguments()[0];
 
             List<Type> derivedTypes = GetAllDerivedTypes(baseType);
-            string[] displayNames = derivedTypes.Select(t => t.FullName).ToArray();
+            string[] displayNames = derivedTypes.Select(t => t?.FullName ?? "Null").ToArray();
 
             int currentIndex = 0;
             if (!string.IsNullOrEmpty(classTypeNameProp.stringValue))
@@ -64,10 +64,10 @@ namespace CLGameToolkit.Serialization
             }
 
             UnityEditor.EditorGUI.BeginProperty(position, label, property);
-            int newIndex = UnityEditor.EditorGUI.Popup(position, $"{baseType.Name} Type", currentIndex, displayNames);
+            int newIndex = UnityEditor.EditorGUI.Popup(position, property.displayName, currentIndex, displayNames);
             if (newIndex != currentIndex && newIndex >= 0 && newIndex < derivedTypes.Count)
             {
-                classTypeNameProp.stringValue = derivedTypes[newIndex].AssemblyQualifiedName;
+                classTypeNameProp.stringValue = newIndex == 0 ? string.Empty : derivedTypes[newIndex].AssemblyQualifiedName;
             }
 
             UnityEditor.EditorGUI.EndProperty();
@@ -104,7 +104,10 @@ namespace CLGameToolkit.Serialization
                 }
             }
 
-            return result.OrderBy(t => t.Name).ToList();
+            var list = result.OrderBy(t => t.Name).ToList();
+            list.Insert(0, null);
+
+            return list;
         }
     }
 }
