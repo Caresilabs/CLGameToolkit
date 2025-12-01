@@ -110,5 +110,6 @@ namespace CLGameToolkit.Serialization
             return list;
         }
     }
-}
 #endif
+}
+
