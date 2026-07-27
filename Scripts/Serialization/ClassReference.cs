@@ -75,6 +75,22 @@ namespace CLGameToolkit.Serialization
 
         private static List<Type> GetAllDerivedTypes(Type baseType)
         {
+            var result = UnityEditor.TypeCache
+                .GetTypesDerivedFrom(baseType)
+                .Where(t => !t.IsAbstract)
+                .OrderBy(t => t.Name)
+                .ToList();
+
+            if (!baseType.IsAbstract && !baseType.IsInterface)
+                result.Insert(0, baseType);
+
+            result.Insert(0, null);
+
+            return result;
+        }
+
+        private static List<Type> GetAllDerivedTypesOld(Type baseType)
+        {
             var result = new List<Type>();
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
@@ -88,19 +104,8 @@ namespace CLGameToolkit.Serialization
                 {
                     if (t == null || t.IsAbstract) continue;
 
-                    if (baseType.IsInterface)
-                    {
-                        if (t.GetInterfaces().Contains(baseType))
-                            result.Add(t);
-                    }
-                    else if (t.IsSubclassOf(baseType))
-                    {
+                    if (!t.IsAbstract && baseType.IsAssignableFrom(t))
                         result.Add(t);
-                    }
-                    else if (t == baseType)
-                    {
-                        result.Add(t);
-                    }
                 }
             }
 
