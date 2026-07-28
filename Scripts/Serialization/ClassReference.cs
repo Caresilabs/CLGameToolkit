@@ -30,6 +30,11 @@ namespace CLGameToolkit.Serialization
             ClassTypeName = type.AssemblyQualifiedName;
         }
 
+        private void SetClassAssemblyQualifiedName(string assemblyQualifiedName)
+        {
+            ClassTypeName = assemblyQualifiedName;
+        }
+
         public T CreateInstance()
         {
             if (ClassType == null)
