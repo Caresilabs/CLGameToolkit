@@ -13,6 +13,14 @@ public struct MinMaxRange
     [SerializeField]
     public float MaxValue;
 
+    public MinMaxRange() { }
+
+    public MinMaxRange(float minValue, float maxValue)
+    {
+        MinValue = minValue;
+        MaxValue = maxValue;
+    }
+
     public readonly float Random()
     {
         return UnityEngine.Random.Range(MinValue, MaxValue);
@@ -40,6 +48,14 @@ public struct MinMaxRangeInt
 
     [SerializeField]
     public int MaxValue;
+
+    public MinMaxRangeInt() { }
+
+    public MinMaxRangeInt(int minValue, int maxValue)
+    {
+        MinValue = minValue;
+        MaxValue = maxValue;
+    }
 
     public readonly int Random()
     {
