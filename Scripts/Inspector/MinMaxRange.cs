@@ -13,8 +13,6 @@ public struct MinMaxRange
     [SerializeField]
     public float MaxValue;
 
-    public MinMaxRange() { }
-
     public MinMaxRange(float minValue, float maxValue)
     {
         MinValue = minValue;
@@ -48,8 +46,6 @@ public struct MinMaxRangeInt
 
     [SerializeField]
     public int MaxValue;
-
-    public MinMaxRangeInt() { }
 
     public MinMaxRangeInt(int minValue, int maxValue)
     {
