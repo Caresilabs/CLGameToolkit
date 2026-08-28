@@ -1,30 +1,32 @@
 using UnityEngine;
 
-[RequireComponent(typeof(AudioReverbZone))]
-public class AudioReverbTriggerZone : MonoBehaviour
+namespace CLGameToolkit.Gameplay
 {
-    [SerializeField, ReadOnly] private AudioReverbZone ReverbZone;
-    [SerializeField, TagField] private string CameraTag;
-
-    private int collidedNumber;
-
-    private void OnTriggerEnter(Collider other)
+    [RequireComponent(typeof(AudioReverbZone))]
+    public class AudioReverbTriggerZone : MonoBehaviour
     {
-        if (!other.CompareTag(CameraTag))
-            return;
+        [SerializeField, ReadOnly] private AudioReverbZone ReverbZone;
+        [SerializeField, TagField] private string CameraTag;
 
-        collidedNumber++;
-        ReverbZone.enabled = true;
-    }
+        private int collidedNumber;
 
-    private void OnTriggerExit(Collider other)
-    {
-        if (!other.CompareTag(CameraTag))
-            return;
+        private void OnTriggerEnter(Collider other)
+        {
+            if (!other.CompareTag(CameraTag))
+                return;
 
-        if (--collidedNumber == 0)
-            ReverbZone.enabled = false;
-    }
+            collidedNumber++;
+            ReverbZone.enabled = true;
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            if (!other.CompareTag(CameraTag))
+                return;
+
+            if (--collidedNumber == 0)
+                ReverbZone.enabled = false;
+        }
 
 
 #if UNITY_EDITOR
@@ -50,4 +52,5 @@ public class AudioReverbTriggerZone : MonoBehaviour
 
     }
 #endif
+    }
 }

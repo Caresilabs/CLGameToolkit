@@ -1,3 +1,5 @@
+
+#if DOTWEEN
 using DG.DOTweenEditor;
 using DG.Tweening;
 using UnityEditor;
@@ -138,3 +140,4 @@ public class TweenComponentEditor : Editor
         tweenComponent.transform.localScale = PlayScale;
     }
 }
+#endif
