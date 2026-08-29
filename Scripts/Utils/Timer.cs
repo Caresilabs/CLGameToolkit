@@ -23,6 +23,18 @@ namespace CLGameToolkit.Timers
             return timer;
         }
 
+        public static TimerData Interval(float interval, Action callback, bool instant = false, bool useTimeScale = true)
+        {
+            if (interval <= 0f)
+                throw new ArgumentOutOfRangeException(nameof(interval), interval, "Interval must be greater than zero.");
+
+            TimerData timer = Instance.GetFromPool();
+            timer.StartInterval((useTimeScale ? Time.time : Time.unscaledTime) + (instant ? 0 : interval), interval, callback, useTimeScale);
+
+            Instance.activeTimers.Add(timer);
+            return timer;
+        }
+
         private void Update()
         {
             float time = Time.time;
@@ -43,9 +55,17 @@ namespace CLGameToolkit.Timers
 
                 if (currentTime >= call.targetTime)
                 {
-                    ReturnToPool(call);
-                    activeTimers.RemoveAt(i);
                     call.callback?.Invoke();
+
+                    if (call.isRepeating)
+                    {
+                        call.targetTime += call.interval;
+                    }
+                    else
+                    {
+                        activeTimers.RemoveAt(i);
+                        ReturnToPool(call);
+                    }
                 }
             }
         }
@@ -64,9 +84,11 @@ namespace CLGameToolkit.Timers
     public class TimerData
     {
         internal float targetTime;
+        internal float interval;
         internal Action callback;
         internal bool useTimeScale;
         internal bool isCancelled;
+        internal bool isRepeating;
 
         internal void Start(float targetTime, Action callback, bool respectTimeScale)
         {
@@ -74,13 +96,24 @@ namespace CLGameToolkit.Timers
             this.callback = callback;
             this.useTimeScale = respectTimeScale;
             this.isCancelled = false;
+            this.isRepeating = false;
+        }
+
+        internal void StartInterval(float targetTime, float interval, Action callback, bool respectTimeScale)
+        {
+            this.targetTime = targetTime;
+            this.interval = interval;
+            this.callback = callback;
+            this.useTimeScale = respectTimeScale;
+            this.isCancelled = false;
+            this.isRepeating = true;
         }
 
         public void Stop(bool complete = false)
         {
             isCancelled = true;
 
-            if (complete) 
+            if (complete)
                 callback?.Invoke();
         }
     }
