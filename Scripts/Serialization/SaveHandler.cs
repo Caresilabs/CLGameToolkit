@@ -90,9 +90,15 @@ namespace CLGameToolkit.Serialization
             SaveFile(gameProfileNameGen(profileIndex), null);
         }
 
-        public void DeleteProfile(int profileIndex)
+        public bool DeleteProfile(int profileIndex)
         {
-            SaveFile(gameProfileNameGen(profileIndex), null);
+            string path = Path.Combine(FilePath, gameProfileNameGen(profileIndex));
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+                return true;
+            }
+            return false;
         }
 
         private T ReadFromFile<T>(string fileName) where T : SaveFileBase
